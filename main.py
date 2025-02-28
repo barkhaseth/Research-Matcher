@@ -22,12 +22,6 @@ if not pc.has_index(index_name):
     subprocess.run(["python", "pinecone_setup.py"])
 
 app = Flask(__name__)
-
-'''
-# Load the JSON file back into a DataFrame
-with open('faculty_data.json', 'r') as json_file:
-    loaded_data_list = json.load(json_file)
-'''
     
 #NEW
 with open('faculty_info_uniquekeywords.json', 'r') as json_file:
@@ -90,59 +84,10 @@ def index():
                 "Title": metadata["title"].title(),
                 "Research Summary": metadata["researchSummary"],
                 "One-Line Summary": generate_one_line_summary(metadata["researchSummary"], proposal),
-                "keywords": keywords
+                "keywords": keywords,
+                "email_body": generate_email_body(proposal, metadata["researchSummary"])
             })
         
-        # Dot Product Method
-        '''
-        # Calculate dot product for each row
-        df['Dot Product'] = df['Research Embedding'].apply(lambda x: np.dot(proposal_embedding, x) if x is not None else None)
-
-        # Sort DataFrame based on dot product scores in descending order
-        df_sorted = df.sort_values(by='Dot Product', ascending=False)
-
-        # Select top N rows based on the result count
-        top_n_rows = df_sorted.head(result_count)
-        
-        #NEW
-        top_n_rows['Name_lower'] = top_n_rows['Name'].str.lower()
-        keywords_df['Name_lower'] = keywords_df['name'].str.lower()
-        top_n_rows = pd.merge(top_n_rows, keywords_df[['Name_lower', 'keywords']], on='Name_lower', how='left')
-
-        # Extract relevant information for rendering
-        top_n_rows.loc[:, 'Name'] = top_n_rows['Name'].apply(lambda x: x.title() if x else x)
-        top_n_rows.loc[:, 'Title'] = top_n_rows['Title'].apply(lambda x: x.title() if x else x)
-        top_n_rows['One-Line Summary'] = top_n_rows['Research Summary'].apply(lambda x: generate_one_line_summary(x, proposal) if x else x)
-
-
-        df['Name_lower'] = df['Name'].str.lower()
-        keywords_df['Name_lower'] = keywords_df['name'].str.lower()
-        df = pd.merge(df, keywords_df[['Name_lower', 'keywords']], on='Name_lower', how='left')
-        # Convert to dictionary
-        #print(df)
-        #NEW
-        results = []
-        for _, row in top_n_rows.iterrows():
-            result = {
-                'Name': row['Name'],
-                'Title': row['Title'],
-                'Research Summary': row['Research Summary'],
-                'One-Line Summary': row['One-Line Summary'] 
-            }
-            if 'keywords' in row and isinstance(row['keywords'], list) and len(row['keywords']) > 0:
-                result['keywords'] = row['keywords']  # Keep it as a list
-            else:
-                result['keywords'] = None
-            results.append(result)
-        '''
-            
-        """
-        results = top_n_rows[['Name', 'Title', 'Research Summary', 'keywords']].to_dict(orient='records')
-        for result in results:
-            result['keywords'] = result.get('keywords', [])
-            if isinstance(result['keywords'], str):
-                result['keywords'] = [keyword.strip() for keyword in result['keywords'].split(',')]
-        """
         generated_title = None
 
         if generate_title_checkbox:
@@ -195,6 +140,30 @@ def query_pinecone(proposal_embedding, top_k):
     except Exception as e:
         print(f"Error querying Pinecone: {e}")
         return {"matches": []} 
+    
+def generate_email_body(proposal, faculty_description):
+    prompt = f"""
+    Write a professional email combining the following research proposal and faculty project description.
+    Use the proposal as the starting point and the faculty's description as additional context. The email should be polite and professional.
+
+    Research Proposal:
+    {proposal}
+
+    Faculty Project Description:
+    {faculty_description}
+    """
+
+    response = client.chat.completions.create(
+       model="gpt-4o",  
+        messages=[
+           {"role": "system", "content": "You are an assistant that generates professional emails."},
+            {"role": "user", "content": prompt}
+        ],
+        temperature=0.7,
+        max_tokens=500,
+    )
+
+    return response.choices[0].message.content.strip()
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=80, debug=True)
