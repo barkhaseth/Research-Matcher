@@ -145,24 +145,7 @@ def json_dump(faculty_data, path):
 	with open(path, "w") as file:
 		json.dump(faculty_data, file, indent=4)
 
-## unused ##
-def scrape_profiles(service, options, profile_urls):
-
-	for i, link in enumerate(profile_urls):
-		driver = webdriver.Chrome(service=service, options=options)
-		driver.minimize_window()
-
-		try:
-			driver.get(link)
-
-		except Exception as e:
-			print(f"An error occurred while processing {link}: {e}")
-			print("Full Page Source for Debugging:")
-			print(driver.page_source)
-
-		driver.quit()
-
-def main():
+def scrape_columbia():
 	service = create_service()
 
 	options = Options()
@@ -170,8 +153,11 @@ def main():
 
 	scraped_data = scrape_faculty_data(service, options)
 
-	path = "faculty.json"
+	path = "../data/faculty.json"
 	json_dump(scraped_data, path)
+
+def main():
+	scrape_columbia()
 
 if __name__ == "__main__":
 	main()

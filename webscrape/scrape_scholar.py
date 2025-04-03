@@ -65,16 +65,16 @@ def get_gs_info(fac_json, output_file):
     with open(output_file, 'w') as json_file:
         json.dump(fac_json, json_file, indent=4)
 
-
-
-def main():
-    fac_with_scholar = "faculty.json"
-    with open(fac_with_scholar, 'r') as file:
+def scrape_scholar():
+    fac =  "../data/faculty.json"
+    with open(fac, 'r') as file:
         data = json.load(file)
 
-
-    output_file = 'faculty_with_articles.json'
+    output_file =  "../data/faculty_complete.json"
     get_gs_info(data, output_file)
+
+def main():
+    scrape_scholar()
 
 if __name__ == "__main__":
     main()
