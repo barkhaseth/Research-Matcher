@@ -12,32 +12,31 @@ import json
 import time
 from scholarly import scholarly
 
-# chromedriver_path = 'C:/Users/misss/Downloads/chromedriver-win64/chromedriver.exe'
-# service = Service(executable_path=chromedriver_path)
 driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
 
 def get_gs_info(fac_json, output_file):
     for prof_id, prof_info in fac_json.items():
         if "google-scholar" in prof_info:
             print(prof_info["google-scholar"])
-            
+
             url = prof_info["google-scholar"]
             if url=="https://scholar.google.com/citations?user=":
                 print("skipped")
                 continue
             try:
-                start_index = url.find('user=') + len('user=')
-                author_id = url[start_index:]
+                # start_index = url.find('user=') + len('user=')
+                # author_id = url[start_index:]
+                author_id = url.split("user=")[1].split("&")[0]
                 print(f"Extracted Author ID: {author_id}")
 
                 if not author_id:
                     print("No author ID found, skipping...")
                     continue
-                
+
                 author = scholarly.search_author_id(author_id)
 
                 # Fill the author info
-                author = scholarly.fill(author)  
+                author = scholarly.fill(author)
 
                 articles = []
                 for pub in author['publications']:
@@ -54,7 +53,7 @@ def get_gs_info(fac_json, output_file):
                 sorted_articles = sorted(articles, key=lambda x: x["year"], reverse=True)
 
                 prof_info['sorted_articles'] = sorted_articles
-                
+
                 for article in sorted_articles:
                     print(f"{article['year']}: {article['title']} - {article['link']}")
 
@@ -66,16 +65,16 @@ def get_gs_info(fac_json, output_file):
     with open(output_file, 'w') as json_file:
         json.dump(fac_json, json_file, indent=4)
 
-                
-    
+
+
 def main():
-    fac_with_scholar = "C:/Users/misss/Downloads/chromedriver-win64/fac_info_with_scholar.json"
+    fac_with_scholar = "faculty.json"
     with open(fac_with_scholar, 'r') as file:
         data = json.load(file)
-    
-    
-    output_file = 'C:/Users/misss/Downloads/chromedriver-win64/faculty_info_with_articles.json'
+
+
+    output_file = 'faculty_with_articles.json'
     get_gs_info(data, output_file)
-        
+
 if __name__ == "__main__":
     main()

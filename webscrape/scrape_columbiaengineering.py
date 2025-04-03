@@ -128,6 +128,7 @@ def json_dump(faculty_data, path):
     with open(path, "w") as file:
         json.dump(faculty_data, file, indent=4)
 
+## unused ##
 def scrape_profiles(service, options, profile_urls):
 
     for i, link in enumerate(profile_urls):
