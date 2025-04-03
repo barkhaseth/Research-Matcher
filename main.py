@@ -22,11 +22,11 @@ if not pc.has_index(index_name):
     subprocess.run(["python", "pinecone_setup.py"])
 
 app = Flask(__name__)
-    
+
 #NEW
 with open('faculty_info_uniquekeywords.json', 'r') as json_file:
     faculty_keywords = json.load(json_file)
-    
+
 #df = pd.DataFrame(loaded_data_list)
 
 #NEW
@@ -47,7 +47,7 @@ def index():
     generate_title_checkbox_checked = False
 
     if request.method == 'POST':
-        
+
         log_entry = {'text_content': request.form['proposal'], 'timestamp': str(datetime.now())}
         logging.info(json.dumps(log_entry))
 
@@ -87,7 +87,7 @@ def index():
                 "keywords": keywords,
                 "email_body": generate_email_body(proposal, metadata["researchSummary"])
             })
-        
+
         generated_title = None
 
         if generate_title_checkbox:
@@ -139,8 +139,8 @@ def query_pinecone(proposal_embedding, top_k):
         return results
     except Exception as e:
         print(f"Error querying Pinecone: {e}")
-        return {"matches": []} 
-    
+        return {"matches": []}
+
 def generate_email_body(proposal, faculty_description):
     prompt = f"""
     Write a professional email combining the following research proposal and faculty project description.
@@ -154,7 +154,7 @@ def generate_email_body(proposal, faculty_description):
     """
 
     response = client.chat.completions.create(
-       model="gpt-4o",  
+       model="gpt-4o",
         messages=[
            {"role": "system", "content": "You are an assistant that generates professional emails."},
             {"role": "user", "content": prompt}
