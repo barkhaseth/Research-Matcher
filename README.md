@@ -2,10 +2,10 @@ Goal: Create a website that allows users to input a research project idea, and o
 
 Web Scraping
 
-Web scraped from the SEAS directory page. The website is not static, because new staff members are loaded onto the page each time the ‘next page’ button is clicked. 
-To get all of the faculty research summaries, the link to each professor’s biography page is first scraped using a web controller (Selenium). Upon loading the SEAS directory page, the ‘faculty’ filter is selected. Then the name of each faculty member along with each of their corresponding links are scraped and put into a pandas dataframe. The ‘next page’ button is clicked, and the scraping process is repeated until the next page button is no longer on the page. 
+Web scraped from the SEAS directory page. The website is not static, because new staff members are loaded onto the page each time the ‘next page’ button is clicked.
+To get all of the faculty research summaries, the link to each professor’s biography page is first scraped using a web controller (Selenium). Upon loading the SEAS directory page, the ‘faculty’ filter is selected. Then the name of each faculty member along with each of their corresponding links are scraped and put into a pandas dataframe. The ‘next page’ button is clicked, and the scraping process is repeated until the next page button is no longer on the page.
 At this point, all of the faculty names and the links to their biography pages are stored in a dataframe.
-Next, the dataframe is iterated through. For each faculty member, their link is visited, and the research summary portion of the page is scraped. The text is stored as a field for each faculty entry in the dataframe. 
+Next, the dataframe is iterated through. For each faculty member, their link is visited, and the research summary portion of the page is scraped. The text is stored as a field for each faculty entry in the dataframe.
 
 Text Vectorizing
 
@@ -36,4 +36,14 @@ Generate Title feature
 The website provides an option to generate a title for the user’s research idea.
 When the input is submitted, the app makes a request to the OpenAI API with the input and the following specification: "You are an assistant that generates a simple title for a research paper given a research proposal. Do not include the word title in the response."
 
+
+----------------------------------------------------------------------------------------------------------------
+
+"faculty_data.json" is what is currently in the Pinecone database
+
+main.py and keyword_extraction.py currently reference all the "faculty_info_...json" files
+	these are old and need to be moved/updated
+
+"data/faculty_complete.json" contains newly updated (april 2025) complete data scraped about all professors
+	not used anywhere yet though
 
