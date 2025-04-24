@@ -11,6 +11,8 @@ from collections import Counter
 import numpy as np
 from tenacity import retry, wait_exponential, stop_after_attempt
 from sklearn.metrics.pairwise import cosine_similarity
+from dotenv import load_dotenv
+load_dotenv()
 
 nltk.download('punkt')
 
@@ -92,9 +94,13 @@ def top_keywords(keywords, n):
 
 def prof_keywords(json_data, output_data):
 	for prof_id, prof_data in json_data.items():
+		print("working on this person", prof_id)
+
+		keywords = ""
 		if "sorted_articles" in prof_data and prof_data["sorted_articles"]:
 			titles = [article["title"] for article in prof_data["sorted_articles"]]
-			titles_str = " ".join([title if title.endswith('.') else title + '.' for title in titles])
+
+			# titles_str = " ".join([title if title.endswith('.') else title + '.' for title in titles])
 
 			keywords = get_keywords_batched(titles,20)
 			#print(keywords)
@@ -109,13 +115,11 @@ def prof_keywords(json_data, output_data):
 
 
 def main():
-	filepath = "C:/Users/misss/OneDrive/Desktop/Research-Matcher/faculty_info_complete.json"
-	output = "C:/Users/misss/OneDrive/Desktop/Research-Matcher/faculty_info_uniquekeywords.json"
+	filepath = "./data/faculty_complete.json"
+	output = "./data/faculty_complete_keywords.json"
 	with open(filepath, "r") as json_file:
 		data = json.load(json_file)
 	prof_keywords(data,output)
 
 if __name__ == "__main__":
 	main()
-
-
