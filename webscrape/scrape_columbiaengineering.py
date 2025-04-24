@@ -54,6 +54,7 @@ def scrape_faculty_data(service, options):
 				profile_driver.get(profile_link)
 
 				 ## Retrieve Email ##
+				email = ""
 				try:
 					WebDriverWait(profile_driver, 10).until(
 						EC.presence_of_element_located((By.CSS_SELECTOR, "nav.rail-contact"))
@@ -61,60 +62,72 @@ def scrape_faculty_data(service, options):
 					email_elem = profile_driver.find_element(By.CSS_SELECTOR, ".rail-contact__email a")
 					email = email_elem.get_attribute("href").replace("mailto:", "")
 				except:
-					email = "N/A"
+					# print("no email found")
+					pass
 
 				## Retrieve Additional Links ##
+				additional_links = {}
 				try:
-					cta_list = profile_driver.find_element(By.CSS_SELECTOR, "ul.rail-cta__list").find_elements(By.CSS_SELECTOR, "li.rail-cta__item")
+					ul = profile_driver.find_element(By.CSS_SELECTOR, "ul.rail-cta__list")
+					cta_list = ul.find_elements(By.CSS_SELECTOR, "li.rail-cta__item")
 
 					for item in cta_list:
 						label_link = item.find_element(By.TAG_NAME, "a").get_attribute("href")
 						label = item.find_element(By.CLASS_NAME, "text").text
 						label = label.replace(" ", "-").lower()
 
-						# print(label, label_link)
+						if "scholar.google.com" in label_link:
+							label = "google-scholar"
 						additional_links[label] = label_link
 
 				except:
-					additional_links = {}
+					# print("no additional links")
+					pass
 
-					## Retrieve Intro and Research Areas ##
-					research_intro = ""
-					research_areas = []
+				## Retrieve Intro and Research Areas ##
+				research_intro = ""
+				research_areas = []
 
-					try:
-						WebDriverWait(profile_driver, 10).until(
-							EC.presence_of_element_located((By.CSS_SELECTOR, "div.intro"))
-						)
+				# getting intro actually labeled "INTRO"
+				try:
+					WebDriverWait(profile_driver, 10).until(
+						EC.presence_of_element_located((By.CSS_SELECTOR, "div.intro"))
+					)
 
-						intro = profile_driver.find_element(By.CSS_SELECTOR, "div.intro")
+					intro = profile_driver.find_element(By.CSS_SELECTOR, "div.intro")
 
-						intro_text = intro.find_element(By.TAG_NAME, "p").text
-						research_intro += intro_text
-					except:
-						pass
+					intro_text = intro.find_element(By.TAG_NAME, "p").text
+					research_intro += intro_text
+				except:
+					pass
 
-					try:
-						sections = profile_driver.find_elements(By.CSS_SELECTOR, "section.wysiwyg.component")
-						for sec in sections:
-							try:
-								## Research Areas ##
-								sec_head = sec.find_elements(By.TAG_NAME, "h2")[0].text
-								if sec_head == "Research Areas":
-									research_list = sec.find_elements(By.TAG_NAME, "li")
-									for area in research_list:
-										research_areas.append(area.text)
-							except:
-								## Intro Paragraphs ##
-								paragraphs = sec.find_elements(By.TAG_NAME, "p")
-								for p in paragraphs:
-									research_intro += p.text.replace("\n", " ")
-					except:
-						pass
+				# getting research area and paragraphs associated with intro
+				try:
+					sections = profile_driver.find_elements(By.CSS_SELECTOR, "section.wysiwyg.component")
+					for sec in sections:
+						try:
+							## Research Areas ##
+							sec_head = sec.find_elements(By.TAG_NAME, "h2")[0].text
+							if sec_head == "Research Areas":
+								research_list = sec.find_elements(By.TAG_NAME, "li")
+								for area in research_list:
+									research_areas.append(area.text)
+						except:
+							## Intro Paragraphs ##
+
+							# since we're iterating through sections, the idea is that
+							# if its not a "research area" title, then its probably part
+							# of intro paragarphs
+							paragraphs = sec.find_elements(By.TAG_NAME, "p")
+							for p in paragraphs:
+								research_intro += p.text.replace("\n", " ")
+				except:
+					pass
 
 				profile_driver.quit()
 
 				## Adding to JSON ##
+				name = name.lower().replace(" ", "-")
 				faculty_data[name] = {
 					"name": name,
 					"title": title,
@@ -146,6 +159,7 @@ def json_dump(faculty_data, path):
 		json.dump(faculty_data, file, indent=4)
 
 def scrape_columbia():
+	print("Scraping from Columbia Engineering site")
 	service = create_service()
 
 	options = Options()

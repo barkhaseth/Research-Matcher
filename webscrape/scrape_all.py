@@ -1,5 +1,5 @@
-from webscrape import scrape_scholar
-from webscrape.scrape_columbiaengineering import scrape_columbia
+from scrape_scholar import scrape_scholar
+from scrape_columbiaengineering import scrape_columbia
 
 """
 Scrapes data about all Columbia engineering faculty from scratch
@@ -11,6 +11,7 @@ Scrapes data about all Columbia engineering faculty from scratch
 def main():
 	scrape_columbia()
 	scrape_scholar()
+
 
 if __name__ == "__main__":
 	main()
