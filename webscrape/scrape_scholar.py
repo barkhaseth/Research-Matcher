@@ -1,18 +1,8 @@
 import requests
 from bs4 import BeautifulSoup
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from webdriver_manager.chrome import ChromeDriverManager # type: ignore
 import json
 import time
-from scholarly import scholarly # type: ignore
-
-driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
+from scholarly import scholarly
 
 def get_gs_info(fac_json, output_file):
 	for prof_id, prof_info in fac_json.items():
@@ -20,50 +10,60 @@ def get_gs_info(fac_json, output_file):
 			print(prof_info["google-scholar"])
 
 			url = prof_info["google-scholar"]
-			if url=="https://scholar.google.com/citations?user=":
+			if url == "https://scholar.google.com/citations?user=":
 				print("skipped")
 				continue
 			try:
-				# start_index = url.find('user=') + len('user=')
-				# author_id = url[start_index:]
 				author_id = url.split("user=")[1].split("&")[0]
-				print(f"Extracted Author ID: {author_id}")
+				print(f"Extracted Author ID: {author_id} for {prof_id}")
 
 				if not author_id:
 					print("No author ID found, skipping...")
 					continue
 
-				author = scholarly.search_author_id(author_id)
+				try:
+					author = scholarly.search_author_id(author_id)
+				except:
+					continue
 
-				# Fill the author info
 				author = scholarly.fill(author)
 
 				articles = []
+				article_flag = False
+
 				for pub in author['publications']:
-					title = pub['bib'].get('title', 'No Title Available')  # Safe retrieval
+					title = pub['bib'].get('title', 'No Title Available')
 					year = pub['bib'].get('pub_year', 'Unknown')
-					article_link = pub.get('pub_url', "No link available")  # Retrieve article link
+
+					pub = scholarly.fill(pub, ['pub_url'])
+					article_link = pub.get('pub_url', "No link available")
+					if article_link != "No link available":
+						article_flag = True
 
 					if year != 'Unknown':
 						articles.append({
 							'title': title,
-							'year': int(year) if year.isdigit() else year
+							'year': int(year) if year.isdigit() else year,
+							'link': article_link
 						})
 
-				sorted_articles = sorted(articles, key=lambda x: x["year"], reverse=True)
+				if article_flag:
+					print("retrieved articles successfully")
 
+				sorted_articles = sorted(articles, key=lambda x: x["year"], reverse=True)
 				prof_info['sorted-articles'] = sorted_articles
 
-				for article in sorted_articles:
-					print(f"{article['year']}: {article['title']} - {article['link']}")
+				# Upsert immediately
+				with open(output_file, 'w') as json_file:
+					json.dump(fac_json, json_file, indent=4)
 
-			except requests.exceptions.RequestException as e:
+			except requests.exceptions.RequestException:
+				print("Scholar not found")
 				continue
-			except Exception as e:
+			except Exception:
+				print("Scholar not found")
 				continue
 
-	with open(output_file, 'w') as json_file:
-		json.dump(fac_json, json_file, indent=4)
 
 def scrape_scholar():
 	print("Scraping from Google Scholars")

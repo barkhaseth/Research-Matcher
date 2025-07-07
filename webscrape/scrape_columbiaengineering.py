@@ -10,6 +10,12 @@ from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager # type: ignore
 import json
 import time
+import unicodedata
+
+def remove_formatting(text):
+    normalized = unicodedata.normalize('NFKD', text)
+    ascii_text = normalized.encode('ASCII', 'ignore').decode('ASCII')
+    return ascii_text
 
 def print_card_info(name, title, profile_link, img_src):
 	print("Name:", name)
@@ -125,10 +131,11 @@ def scrape_faculty_data(service, options):
 					pass
 
 				profile_driver.quit()
+				name = remove_formatting(name)
 
 				## Adding to JSON ##
-				name = name.lower().replace(" ", "-")
-				faculty_data[name] = {
+				name_key = name.lower().replace(" ", "-")
+				faculty_data[name_key] = {
 					"name": name,
 					"title": title,
 					"profile-link": profile_link,
